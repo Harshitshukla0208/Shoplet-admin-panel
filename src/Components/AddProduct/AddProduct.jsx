@@ -21,40 +21,56 @@ const AddProduct = () => {
         setProductDetails({...productDetails, [e.target.name]:e.target.value})
     }
 
-    const AddProduct = async() => {
-        console.log(productDetails);
-        let responseData;
-        let product = productDetails;
-
-        //sending image inside form
-        let formData = new FormData();
-        formData.append('product', image);
-
-        //sending form data to api
-        await fetch('http://localhost:3000/upload', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-            },
-            body: formData,
-        }).then((response) => response.json()).then((data) => {responseData = data})
-
-        //if this condition gets true that means we get the image url andwe had uploaded the image using multer
-        if(responseData.success){
-            product.image = responseData.image_url;
-            console.log(product)
-            await fetch('http://localhost:3000/addproduct',{
+    const AddProduct = async () => {
+        try {
+            console.log(productDetails);
+            let responseData;
+            let product = productDetails;
+    
+            // Sending image inside form
+            let formData = new FormData();
+            formData.append('product', image);
+    
+            // Sending form data to API
+            const uploadResponse = await fetch('http://localhost:3000/upload', {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
-                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(product),
-            }).then((response) => response.json()).then((data) => {
-                data.success ? alert("Product added") : alert("Failed")
-            })
+                body: formData,
+            });
+            responseData = await uploadResponse.json();
+    
+            // Check if image upload was successful
+            if (responseData.success) {
+                product.image = responseData.image_url;
+                console.log(product);
+    
+                // Sending product details to addproduct endpoint
+                const addProductResponse = await fetch('http://localhost:3000/addproduct', {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(product),
+                });
+                const data = await addProductResponse.json();
+    
+                // Alert success or failure based on response
+                if (data.success) {
+                    alert("Product added");
+                } else {
+                    alert("Failed to add product");
+                }
+            } else {
+                alert("Failed to upload image");
+            }
+        } catch (error) {
+            console.error("An error occurred:", error);
+            alert("An error occurred while adding the product");
         }
-    }
+    };    
 
     return (
         <div className='add-product'>
